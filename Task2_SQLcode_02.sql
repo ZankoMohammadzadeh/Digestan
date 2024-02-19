@@ -1,67 +1,57 @@
-﻿
--- number of providers in holidays
-select  count(distinct providerid )
-from orders A
-where date(A.createdAt) in
-(select * from holidays )
 
--- number of providers in non holidays
-select  count(distinct providerid )
-from orders A
-where date(A.createdAt) not in
-(select * from holidays )
-
-
-select date(createdAt), sum(sales)
-from orders
-group by date(createdAt)
-order by sum(sales) 
-
--- Average o Sales in holidays = 236999
-With count_Holidays as
+-- Question 2.1 -------------------------------------------
+-- sales in holidays
+-- maximum sale in holidays
+-- date 2023-11-04    -- sale 372,423
+With A as
 (
-select count(distinct(date(A.createdAt))) as CNT_Holi
-from orders A
-where date(A.createdAt)  in 
-(select *
-from holidays)
+select date(O.createdAt), Sum(sales) as sum_sales, count(*) as cnt
+from orders as O
+where date(O.createdAt) in (select holyDate from holidays)
+group by date(O.createdAt)
+--order by Sum(sales) desc
 )
-select Sum(sales) / CNT_Holi
-from orders A, count_Holidays
-inner join holidays B on date(A.createdAt) = B.holyDate
+select round(avg(sum_sales),0), round(avg(cnt),0)
+from A
 
-
--- Average o Sales in non holidays = 17193025
-With count_Non_Holidays as
+-- sales in non holidays
+-- maximum sale in non-holidays
+-- date 2023-11-08	 -- sale 951,342
+with A as
 (
-select count(distinct(date(A.createdAt))) as CNT_Non_Holi
-from orders A
-where date(A.createdAt) not in 
-(select *
-from holidays)
+select date(O.createdAt), Sum(sales) as sum_sales, count(*) as cnt
+from orders as O
+where date(O.createdAt) not in (select holyDate from holidays)
+group by date(O.createdAt)
+order by Sum(sales) desc
 )
-select Sum(sales) / CNT_Non_Holi
-from orders A, count_Non_Holidays
-inner join holidays B on date(A.createdAt) != B.holyDate
+select round(avg(sum_sales),0), round(avg(cnt),0)
+from A
 
-------------------------------------------
+-- Question 2.2 -------------------------------------------
 
-select count(distinct(date(A.createdAt))) as CNT_holi
-from orders A
-where date(A.createdAt)  in 
-(select *
-from holidays)
-
-inner join holidays B on date(A.createdAt) = B.holyDate
-
-With count_holidays as
+-- average number of providers in holidays
+with A as
 (
-select count(distinct(date(A.createdAt))) as CNT_holi
-from orders A
-inner join holidays B on date(A.createdAt) = B.holyDate
+select date(O.createdAt), count(distinct(providerid)) as cnt
+from orders as O
+where date(O.createdAt) in (select holyDate from holidays)
+group by date(O.createdAt)
 )
-select Sum(sales) / CNT_holi
-from orders A, count_holidays
-inner join holidays B on date(A.createdAt) != B.holyDate
+select round(avg(cnt), 0)
+from A
+
+-- average number of providers in non holidays
+with A as
+(
+select date(O.createdAt), count(distinct(providerid)) as cnt
+from orders as O
+where date(O.createdAt) not in (select holyDate from holidays)
+group by date(O.createdAt)
+)
+select round(avg(cnt), 0)
+from A
+
+-----------------------------------------------------------
 
 
